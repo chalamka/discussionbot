@@ -26,7 +26,7 @@ def load_config(filename):
         with open(filename) as fp:
             return json.load(fp)
     except IOError:
-        logger.critical("Failed to load discussion configuration file \"%s\"" % filename)
+        logger.critical("Failed to load discussion configuration file \"{}\"".format(filename))
         sys.exit(2)
 
 def write_json(filename, to_write):
@@ -42,19 +42,21 @@ def new_submission(r, config, previous_threads):
 
     body = config['body']
     body = re.sub("MM/DD/YY", dt.datetime.now().strftime("[%m/%d/%y]"),body)
+
+    # generate a bulleted list of previous threads (as links)
     body += "\n\nPrevious Weekly Threads:"
     for thread in previous_threads['previous_submissions']:
-        previous_submission = r.get_submission(submission_id='%s' % thread)
-        body += "\n\n* [" + previous_submission.title + "]" + "(" + previous_submission.url + ")"
+        previous_submission = r.get_submission(submission_id='{}'.format(thread))
+        body += "\n\n* [{}]({})".format(previous_submission.title, previous_submission.url)
 
-    logger.info("New post: \"%s\"" % title)
+    logger.info("New post: \"{}\"".format(title))
     submission = r.submit(subreddit, title, text=body, save=True)
-    logger.info("New post \"%s\" submitted to /r/%s\n" % (title, subreddit))
+    logger.info("New post \"{}\" submitted to /r/{}\n".format(title, subreddit))
 
     return submission
 
 def update_sidebar(r, config, submission):
-    logger.info("Updating sidebar, subreddit = %s" % config['subreddit'])
+    logger.info("Updating sidebar, subreddit = {}".format(config['subreddit']))
     subreddit = r.get_subreddit(config['subreddit'])
     settings = r.get_settings(subreddit)
     sidebar = settings['description']
@@ -71,12 +73,12 @@ def update_sidebar(r, config, submission):
     start_flag = re.search(opening_marker, sidebar)
 
     #format a string to contain the submission title as a link to the thread
-    submission_link = "[" + submission.title + "]" + "(" + submission.url + ")"
+    submission_link = "[{}]({})".format(submission.title, submission.url)
 
     try:
         marker_pos = start_flag.end()
         sidebar = sidebar[:marker_pos] + submission_link + sidebar[marker_pos:]
-        logger.info("updated sidebar:\n%s" % sidebar)
+        logger.info("updated sidebar:\n{}".format(sidebar))
     except ValueError:
         # Substring not found
         logger.info("Flags not found.")
@@ -99,8 +101,8 @@ def main(args):
             level=logging.INFO
     source_file = "".join(args)
     logger.setLevel(level)
-    
-    logger.info("In main function\nLoading config from %s" % source_file)
+
+    logger.info("In main function\nLoading config from {}".format(source_file))
 
     #load config files
     config = load_config(source_file)
@@ -115,7 +117,7 @@ def main(args):
     except praw.errors.APIException:
         logger.critical("Could not authenticate with Reddit.  Likely an incorrect username/password")
         sys.exit(3)
-    logger.info("Successfully authenticated %s\nSubreddit: %s\n" % (bot['username'], bot['subreddit']))
+    logger.info("Successfully authenticated {}\nSubreddit: {}\n".format(bot['username'], bot['subreddit']))
 
     # create a new discussion thread based on config
     # update sidebar to include a link

@@ -56,4 +56,5 @@ target/
 config.json*
 botconfig.json*
 previous_submissions.json*
-
+.gitignore~
+*.*~
