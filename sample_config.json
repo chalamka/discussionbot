@@ -1,0 +1,9 @@
+{
+    "doctype": "doctype",
+    "subreddit": "subreddit",
+    "title": "test title for MM/DD/YY",
+    "body": "test body MM\n~~formating~~\n\n[link](http://www.google.com)\n\n**bold** *italic*\n\n* list item\n* list item2\n* list item3\n\nMM/DD/YY", 
+    "startflag": "(\\[]\\(#FLAG\\))",
+    "endflag": "(\\[]\\(\\/FLAG\\))",
+    "previous_submissions": "filename.json" 
+}

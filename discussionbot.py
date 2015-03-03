@@ -18,9 +18,11 @@ logger.addHandler(logging.StreamHandler())
 
 BOT_CONFIG = "botconfig.json"
 
+# usage prints valid flags
 def usage():
     print("invalid option.\nvalid options are -v --verbose")
 
+# load_config opens "filename" and returns the object
 def load_config(filename):
     try:
         with open(filename) as fp:
@@ -29,10 +31,12 @@ def load_config(filename):
         logger.critical("Failed to load discussion configuration file \"{}\"".format(filename))
         sys.exit(2)
 
+# write_json writes the string "to_write" to a file named "filename"
 def write_json(filename, to_write):
     with open(filename, 'w') as fp:
         return json.dump(to_write, fp)
 
+# new_submission creates a new reddit post based on the provided config file
 def new_submission(r, config, previous_threads):
     logger.info("Creating a new submission...")
     subreddit = config['subreddit']
@@ -55,6 +59,7 @@ def new_submission(r, config, previous_threads):
 
     return submission
 
+# update_sidebar updates the desired subreddit's sidebar to include a link to submission
 def update_sidebar(r, config, submission):
     logger.info("Updating sidebar, subreddit = {}".format(config['subreddit']))
     subreddit = r.get_subreddit(config['subreddit'])
