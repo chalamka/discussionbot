@@ -11,6 +11,7 @@ import praw.helpers
 import praw.errors
 import re
 import datetime as dt
+import HTMLParser
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -46,9 +47,10 @@ def new_submission(r, config, previous_threads):
 
     body = config['body']
     body = re.sub("MM/DD/YY", dt.datetime.now().strftime("[%m/%d/%y]"),body)
+    body = re.sub("POST#", '{}'.format(len(previous_threads['previous_submissions']) + 1), body)
 
     # generate a bulleted list of previous threads (as links)
-    body += "\n\nPrevious Weekly Threads:"
+    body += "\n\n**Previous Weekly Threads:**"
     for thread in previous_threads['previous_submissions']:
         previous_submission = r.get_submission(submission_id='{}'.format(thread))
         body += "\n\n* [{}]({})".format(previous_submission.title, previous_submission.url)
@@ -56,6 +58,9 @@ def new_submission(r, config, previous_threads):
     logger.info("New post: \"{}\"".format(title))
     submission = r.submit(subreddit, title, text=body, save=True)
     logger.info("New post \"{}\" submitted to /r/{}\n".format(title, subreddit))
+
+    #distinguish the submission
+    submission.distinguish()
 
     return submission
 
@@ -78,15 +83,19 @@ def update_sidebar(r, config, submission):
     start_flag = re.search(opening_marker, sidebar)
 
     #format a string to contain the submission title as a link to the thread
-    submission_link = "[{}]({})".format(submission.title, submission.url)
+    submission_link = "[{}]({})".format(submission.title, submission.short_link)
 
     try:
         marker_pos = start_flag.end()
-        sidebar = sidebar[:marker_pos] + submission_link + sidebar[marker_pos:]
-        logger.info("updated sidebar:\n{}".format(sidebar))
+        sidebar = sidebar[:marker_pos] + "* " + submission_link + sidebar[marker_pos:]
+        logger.info("Updated sidebar\n")
     except ValueError:
         # Substring not found
         logger.info("Flags not found.")
+
+    #fix any HTML encoding errors
+    h = HTMLParser.HTMLParser()
+    sidebar = h.unescape(sidebar)
 
     subreddit.update_settings(description=sidebar)
 
@@ -122,7 +131,7 @@ def main(args):
     except praw.errors.APIException:
         logger.critical("Could not authenticate with Reddit.  Likely an incorrect username/password")
         sys.exit(3)
-    logger.info("Successfully authenticated {}\nSubreddit: {}\n".format(bot['username'], bot['subreddit']))
+    logger.info("Successfully authenticated {}\nSubreddit: {}\n".format(bot['username'], config['subreddit']))
 
     # create a new discussion thread based on config
     # update sidebar to include a link
